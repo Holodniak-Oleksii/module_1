@@ -198,6 +198,12 @@ window.loadModelFromFile = (evt) => {
   reader.readAsText(file);
 };
 
+// 🔹 Тригер вибору файлу моделі (кнопка «Завантажити модель»)
+window.triggerModelOpen = () => {
+  const input = document.getElementById("modelFile");
+  if (input) input.click();
+};
+
 // 🧾 Експорт простого звіту
 window.downloadReport = () => {
   const cfg = readConfigFromUI(baseConfig ?? { learningRate: 0.1, epochs: 100, kohonenNeurons: 3 });

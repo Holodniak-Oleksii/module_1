@@ -1,5 +1,6 @@
 {
   "learningRate": 0.3,
   "epochs": 50,
-  "kohonenNeurons": 3
+  "kohonenNeurons": 3,
+  "version": "1.0.1"
 }

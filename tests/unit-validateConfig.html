@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="uk">
+
+<head>
+    <meta charset="utf-8">
+    <title>Unit tests: validateConfig</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 24px;
+            background: #0f172a;
+            color: #e5e7eb;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #233046;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .summary {
+            margin: 8px 0 16px;
+            font-weight: bold;
+            position: sticky;
+            top: 8px;
+            background: #111827;
+            border: 1px solid #233046;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        .controls {
+            margin: 12px 0 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 6px 12px;
+            border: 0;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .group {
+            margin-top: 18px;
+        }
+
+        .group h3 {
+            margin: 14px 0 6px;
+        }
+
+        .pass {
+            color: #22c55e;
+        }
+
+        .fail {
+            color: #ef4444;
+        }
+
+        code {
+            background: #0b1220;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #93c5fd;
+        }
+
+        .muted {
+            color: #94a3b8;
+        }
+
+        .legend {
+            font-size: 13px;
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        }
+    </style>
+    <script type="module">
+        import { validateConfig } from "../utils/config.js";
+
+        let resultsRoot, summaryEl;
+        const state = { passed: 0, failed: 0, total: 0 };
+
+        function reset() {
+            state.passed = 0; state.failed = 0; state.total = 0;
+            resultsRoot.innerHTML = "";
+            renderSummary();
+        }
+
+        function renderSummary() {
+            summaryEl.textContent = `Усього: ${state.total} • ✔ Пройшло: ${state.passed} • ✘ Завалено: ${state.failed}`;
+            summaryEl.className = "summary " + (state.failed ? "fail" : "pass");
+        }
+
+        function printLine(text, ok, container) {
+            const p = document.createElement("p");
+            p.className = ok ? "pass" : "fail";
+            p.textContent = (ok ? "✔ " : "✘ ") + text;
+            container.appendChild(p);
+        }
+
+        function startGroup(title) {
+            const div = document.createElement("div");
+            div.className = "group";
+            const h = document.createElement("h3");
+            h.textContent = title;
+            div.appendChild(h);
+            resultsRoot.appendChild(div);
+            return div;
+        }
+
+        function assert(name, condition, groupEl) {
+            state.total += 1;
+            if (condition) {
+                state.passed += 1;
+            } else {
+                state.failed += 1;
+            }
+            printLine(name, condition, groupEl);
+        }
+
+        function run() {
+            reset();
+
+            // Group: learningRate
+            const gLR = startGroup("learningRate");
+            assert("lr = 0 → rejected", validateConfig({ learningRate: 0, epochs: 10, kohonenNeurons: 2 }).length > 0, gLR);
+            assert("lr < 0 → rejected", validateConfig({ learningRate: -0.01, epochs: 10, kohonenNeurons: 2 }).length > 0, gLR);
+            assert("lr = 1 → accepted", validateConfig({ learningRate: 1, epochs: 10, kohonenNeurons: 2 }).length === 0, gLR);
+            assert("lr in (0,1) e.g. 0.000001 → accepted", validateConfig({ learningRate: 0.000001, epochs: 10, kohonenNeurons: 2 }).length === 0, gLR);
+            assert("lr > 1 → rejected", validateConfig({ learningRate: 1.00001, epochs: 10, kohonenNeurons: 2 }).length > 0, gLR);
+            assert("lr = NaN → rejected", validateConfig({ learningRate: NaN, epochs: 10, kohonenNeurons: 2 }).length > 0, gLR);
+
+            // Group: epochs
+            const gEp = startGroup("epochs");
+            assert("epochs = 1 → accepted", validateConfig({ learningRate: 0.3, epochs: 1, kohonenNeurons: 2 }).length === 0, gEp);
+            assert("epochs = 0 → rejected", validateConfig({ learningRate: 0.3, epochs: 0, kohonenNeurons: 2 }).length > 0, gEp);
+            assert("epochs < 0 → rejected", validateConfig({ learningRate: 0.3, epochs: -5, kohonenNeurons: 2 }).length > 0, gEp);
+            assert("epochs = 3.14 (non-integer) → rejected", validateConfig({ learningRate: 0.3, epochs: 3.14, kohonenNeurons: 2 }).length > 0, gEp);
+            assert("epochs very large (1e6 + 1) → rejected", validateConfig({ learningRate: 0.3, epochs: 1000001, kohonenNeurons: 2 }).length > 0, gEp);
+            assert("epochs string '10' → rejected", validateConfig({ learningRate: 0.3, epochs: "10", kohonenNeurons: 2 }).length > 0, gEp);
+
+            // Group: kohonenNeurons vs classesCount
+            const gKN = startGroup("kohonenNeurons vs classesCount");
+            assert("neurons = classesCount (2) → accepted", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 2 }, 2).length === 0, gKN);
+            assert("neurons > classesCount (3 > 2) → accepted", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 3 }, 2).length === 0, gKN);
+            assert("neurons < classesCount (1 < 2) → rejected", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 1 }, 2).length > 0, gKN);
+            assert("neurons = 0 → rejected", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 0 }, 2).length > 0, gKN);
+            assert("neurons negative → rejected", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: -2 }, 2).length > 0, gKN);
+            assert("neurons non-integer (2.5) → rejected", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 2.5 }, 2).length > 0, gKN);
+            assert("classesCount = 3, neurons = 3 → accepted", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 3 }, 3).length === 0, gKN);
+            assert("classesCount = 3, neurons = 2 → rejected", validateConfig({ learningRate: 0.3, epochs: 10, kohonenNeurons: 2 }, 3).length > 0, gKN);
+
+            // Group: combined scenarios
+            const gComb = startGroup("Combined config scenarios");
+            assert("valid combo → accepted", validateConfig({ learningRate: 0.3, epochs: 50, kohonenNeurons: 3 }, 2).length === 0, gComb);
+            assert("invalid lr & epochs → rejected (>=1 error)", validateConfig({ learningRate: 2, epochs: 0, kohonenNeurons: 3 }, 2).length >= 1, gComb);
+            assert("all invalid → rejected (>=2 errors)", validateConfig({ learningRate: -1, epochs: -10, kohonenNeurons: 0 }, 4).length >= 2, gComb);
+            assert("extra field 'version' ignored by validator", Array.isArray(validateConfig({ learningRate: 0.3, epochs: 5, kohonenNeurons: 3, version: "1.0.1" }, 2)), gComb);
+
+            // Group: robustness to weird input shapes
+            const gWeird = startGroup("Robustness (weird shapes)");
+            assert("missing fields → rejected", validateConfig({}).length > 0, gWeird);
+            assert("null fields → rejected", validateConfig({ learningRate: null, epochs: null, kohonenNeurons: null }).length > 0, gWeird);
+            assert("undefined fields → rejected", validateConfig({ learningRate: undefined, epochs: undefined, kohonenNeurons: undefined }).length > 0, gWeird);
+
+            renderSummary();
+        }
+
+        async function copyResults() {
+            const text = document.getElementById("results").innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+                alert("Скопійовано у буфер обміну.");
+            } catch {
+                alert("Не вдалося скопіювати.");
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            summaryEl = document.getElementById("summary");
+            resultsRoot = document.getElementById("results");
+            document.getElementById("runBtn").addEventListener("click", run);
+            document.getElementById("copyBtn").addEventListener("click", copyResults);
+            run();
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>Unit tests: <code class="mono">utils/config.js::validateConfig</code></h2>
+            <div class="legend muted">Легенда: <span class="pass">✔ пройшло</span>, <span class="fail">✘
+                    завалено</span>. Тести згруповані за типами перевірок.</div>
+            <div id="summary" class="summary muted">Готуємося до запуску…</div>
+            <div class="controls">
+                <button id="runBtn" title="Перезапустити тести">Run tests</button>
+                <button id="copyBtn" title="Скопіювати результати у буфер">Copy results</button>
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+</body>
+
+</html>
