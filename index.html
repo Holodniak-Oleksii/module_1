@@ -1,218 +1,254 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="uk">
-
 <head>
   <meta charset="UTF-8" />
-  <title>CPN Neural Network</title>
-
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --accent: #38bdf8;
-      --accent-2: #0ea5e9;
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --err: #ef4444;
-      --text: #e5e7eb;
-      --muted: #94a3b8;
-      --border: #233046;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto;
-      background: radial-gradient(1200px 600px at top right, #0b1224 0%, #0f172a 50%, #0b1224 100%);
-      color: var(--text);
-      margin: 0;
-      padding: 24px;
-    }
-
-    .container {
-      max-width: 980px;
-      margin: auto;
-      animation: fadeIn 0.4s ease;
-    }
-
-    h1 {
-      text-align: center;
-      margin: 10px 0 24px;
-      letter-spacing: 0.4px;
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%);
-      padding: 20px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
-      border-color: #2b3a55;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px 12px;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #0b1220;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: var(--accent);
-      color: #0b1220;
-      font-weight: bold;
-      transition: transform 0.05s ease, background 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
-    }
-
-    button:hover {
-      background: var(--accent-2);
-    }
-
-    button:active {
-      transform: translateY(1px);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    textarea {
-      width: 100%;
-      height: 170px;
-      margin-top: 10px;
-      border-radius: 10px;
-      padding: 12px;
-      background: #0b1220;
-      color: #00ff88;
-      border: 1px solid var(--border);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      resize: vertical;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .row>* {
-      flex: 1;
-      min-width: 160px;
-    }
-
-    #result {
-      font-size: 18px;
-      margin-top: 10px;
-      color: #4ade80;
-    }
-
-    canvas {
-      background: #0f172a;
-      border: 1px solid var(--accent);
-      border-radius: 10px;
-      margin-top: 10px;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>МЗП — Мережа зустрічного поширення</title>
+  <script src="js/config.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-  <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
-  <div class="container">
-    <h1>🧠 МЗП (Counterpropagation Network)</h1>
+  <div id="appErrorBanner" class="app-error-banner" role="alert" hidden></div>
+  <div class="app">
+    <header class="app-header">
+      <nav class="tabs" role="tablist" aria-label="Розділи застосунку">
+        <button class="tabs__btn tabs__btn--active" role="tab" aria-selected="true" aria-controls="tab-training" id="tab-btn-training" data-tab="training">Навчання</button>
+        <button class="tabs__btn" role="tab" aria-selected="false" aria-controls="tab-testing" id="tab-btn-testing" data-tab="testing">Тестування</button>
+        <button class="tabs__btn" role="tab" aria-selected="false" aria-controls="tab-report" id="tab-btn-report" data-tab="report">Звіт та експорт</button>
+      </nav>
+    </header>
 
-    <div class="card">
-      <h3>⚙️ Параметри</h3>
-      <div class="row">
-        <input id="lr" placeholder="Learning rate (0.1)" value="0.1" />
-        <input id="epochs" placeholder="Epochs (100)" value="100" />
-        <input id="neurons" placeholder="Neurons (3)" value="3" />
+    <section class="tab-panel tab-panel--active" id="tab-training" role="tabpanel" aria-labelledby="tab-btn-training">
+      <div class="training-layout">
+        <aside class="panel panel--params">
+          <div class="panel__header">
+            <h1 class="panel__title" id="appTitle">Мережа зустрічного поширення</h1>
+            <span class="panel__version" id="appVersion"></span>
+          </div>
+
+          <p class="panel-intro">Налаштуйте параметри та натисніть «Запустити навчання». Після цього перевірте колір на вкладці «Тестування».</p>
+
+          <div class="form-group">
+            <label for="kohNeurons">Нейронів Кохонена</label>
+            <input type="number" id="kohNeurons" min="2" max="20" step="1"
+              title="Кількість нейронів конкурентного шару Кохонена (2–20)"
+              placeholder="6" />
+            <p class="field-hint">Скільки кластерів формує шар Кохонена. Для 6 кольорів зазвичай достатньо 6.</p>
+            <div class="field-error" id="kohNeuronsError" hidden></div>
+          </div>
+
+          <div class="form-group">
+            <label for="learningRateKohonen">Коеф. навчання Кохонена</label>
+            <input type="number" id="learningRateKohonen" min="0.01" max="1" step="0.01"
+              title="Швидкість оновлення ваг шару Кохонена (0.01–1.0)"
+              placeholder="0.30" />
+            <p class="field-hint">Чим більше значення, тим швидше змінюються ваги. Рекомендовано 0.1–0.5.</p>
+            <div class="field-error" id="learningRateKohonenError" hidden></div>
+          </div>
+
+          <div class="form-group">
+            <label for="learningRateGrossberg">Коеф. навчання Гроссберга</label>
+            <input type="number" id="learningRateGrossberg" min="0.01" max="1" step="0.01"
+              title="Швидкість оновлення ваг шару Гроссберга (0.01–1.0)"
+              placeholder="0.10" />
+            <p class="field-hint">Впливає на точність відповіді «колір → клас». Зазвичай менший за коефіцієнт Кохонена.</p>
+            <div class="field-error" id="learningRateGrossbergError" hidden></div>
+          </div>
+
+          <div class="form-group">
+            <label for="maxEpochs">Кількість епох</label>
+            <input type="number" id="maxEpochs" min="1" max="500" step="1"
+              title="Максимальна кількість епох навчання (1–500)"
+              placeholder="100" />
+            <p class="field-hint">Скільки разів мережа пройде весь навчальний набір. 50–100 епох зазвичай достатньо.</p>
+            <div class="field-error" id="maxEpochsError" hidden></div>
+          </div>
+
+          <textarea id="trainingData" hidden aria-hidden="true"></textarea>
+          <textarea id="targetData" hidden aria-hidden="true"></textarea>
+
+          <div class="btn-group">
+            <button class="btn btn--primary" id="btnTrain"
+              title="Ініціалізувати мережу та запустити навчання">Запустити навчання</button>
+            <button class="btn btn--secondary" id="btnReset"
+              title="Скинути мережу та очистити результати">Скинути</button>
+          </div>
+        </aside>
+
+        <div class="panel panel--results">
+          <h2 class="panel__subtitle">Результати навчання</h2>
+
+          <div class="progress">
+            <div class="progress__label" id="progressLabel">Готовий до навчання</div>
+            <div class="progress__track" id="progressBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="progress__fill" id="progressFill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="log-section">
+            <h3 class="section-label">Лог подій (останні 10 записів)</h3>
+            <p class="field-hint">Усі дії та помилки зберігаються тут і у файлі .log (вкладка «Звіт та експорт»).</p>
+            <div class="log-box" id="logBox" aria-live="polite"></div>
+          </div>
+
+          <div class="chart-section">
+            <h3 class="section-label">Графік помилки навчання (MSE)</h3>
+            <div class="chart-wrapper">
+              <canvas id="trainingChart"></canvas>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="row">
-        <button onclick="init()">Ініціалізувати мережу</button>
+    </section>
+
+    <section class="tab-panel" id="tab-testing" role="tabpanel" aria-labelledby="tab-btn-testing" hidden>
+      <div class="testing-layout">
+        <div class="card">
+          <h2 class="card__title">Розпізнавання кольору (RGB)</h2>
+
+          <p class="color-test-hint">Оберіть колір або задайте компоненти R, G, B (0–255). Мережа визначить, до якого з шести базових кольорів він найближчий.</p>
+
+          <div class="color-test-notice" id="testNotice" hidden></div>
+
+          <div class="color-test-picker">
+            <div class="color-test-preview" id="colorPreview" title="Обраний колір"></div>
+            <div class="color-test-controls">
+              <div class="form-group form-group--compact">
+                <label for="testColorPicker">Палітра</label>
+                <input type="color" id="testColorPicker" value="#e61919"
+                  title="Оберіть колір мишкою" />
+              </div>
+              <div class="color-channel">
+                <label for="testR">R <span id="testRVal">230</span></label>
+                <input type="range" id="testR" min="0" max="255" value="230" />
+              </div>
+              <div class="color-channel">
+                <label for="testG">G <span id="testGVal">25</span></label>
+                <input type="range" id="testG" min="0" max="255" value="25" />
+              </div>
+              <div class="color-channel">
+                <label for="testB">B <span id="testBVal">25</span></label>
+                <input type="range" id="testB" min="0" max="255" value="25" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field-error" id="testRgbError" hidden></div>
+
+          <button class="btn btn--primary btn--inline" id="btnPredict"
+            title="Подати RGB на вхід навченої мережі">Розпізнати колір</button>
+
+          <div class="result-block">
+            <h3 class="section-label">Найближчий колір</h3>
+            <div class="result-box result-box--interpretation" id="interpretationResult"
+              title="Результат класифікації">—</div>
+          </div>
+
+          <div class="result-block">
+            <h3 class="section-label">Впевненість мережі</h3>
+            <div class="confidence-bars" id="confidenceBars">
+              <p class="confidence-bars__empty">Спочатку навчіть мережу на задачі «Розпізнавання кольорів»</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card">
+          <h2 class="card__title">Останні 10 тестових запитів</h2>
+          <div class="table-wrap">
+            <table class="data-table" id="testHistoryTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Час</th>
+                  <th>RGB</th>
+                  <th>Колір</th>
+                  <th>Впевненість</th>
+                </tr>
+              </thead>
+              <tbody id="testHistoryBody">
+                <tr class="data-table__empty">
+                  <td colspan="5">Ще немає тестових запитів</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="card">
-      <h3>📥 Вхідні дані</h3>
-      <input id="inputData" placeholder="Наприклад: 1,0" />
-      <button onclick="predict()">Розпізнати</button>
-      <div id="result"></div>
-    </div>
+    <section class="tab-panel" id="tab-report" role="tabpanel" aria-labelledby="tab-btn-report" hidden>
+      <div class="report-layout">
+        <div class="card">
+          <h2 class="card__title">Параметри мережі</h2>
+          <div class="table-wrap">
+            <table class="data-table data-table--params" id="paramsTable">
+              <thead>
+                <tr>
+                  <th>Параметр</th>
+                  <th>Значення</th>
+                </tr>
+              </thead>
+              <tbody id="paramsTableBody">
+                <tr><td colspan="2">Мережу ще не навчено</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-    <div class="card">
-      <h3>🎯 Навчання</h3>
-      <div class="row">
-        <button onclick="train()">Навчити мережу</button>
-        <button onclick="saveModel()">Зберегти модель</button>
-        <button onclick="triggerModelOpen()">Завантажити модель</button>
+        <div class="report-grid">
+          <div class="card">
+            <h2 class="card__title">Фінальні ваги Кохонена</h2>
+            <div class="table-wrap table-wrap--scroll">
+              <table class="data-table" id="kohWeightsTable">
+                <thead id="kohWeightsHead">
+                  <tr><th>Нейрон</th></tr>
+                </thead>
+                <tbody id="kohWeightsTableBody">
+                  <tr><td>Немає даних</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card__title">Фінальні ваги Гроссберга</h2>
+            <div class="table-wrap table-wrap--scroll">
+              <table class="data-table" id="grossWeightsTable">
+                <thead id="grossWeightsHead">
+                  <tr><th>Нейрон</th></tr>
+                </thead>
+                <tbody id="grossWeightsTableBody">
+                  <tr><td>Немає даних</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card__title">Порівняння ефективності при різних параметрах</h2>
+          <div class="chart-wrapper chart-wrapper--tall">
+            <canvas id="comparisonChart"></canvas>
+          </div>
+        </div>
+
+        <div class="export-actions">
+          <button class="btn btn--primary btn--inline" id="btnExportJSON"
+            title="Зберегти повний звіт у форматі JSON">Експортувати звіт JSON</button>
+          <button class="btn btn--secondary btn--inline" id="btnExportLog"
+            title="Завантажити файл логу подій у форматі .log">Завантажити лог (.log)</button>
+          <button class="btn btn--secondary btn--inline" id="btnExportState"
+            title="Зберегти навчену мережу та результати у файл">Зберегти стан (.json)</button>
+          <button class="btn btn--secondary btn--inline" id="btnImportState"
+            title="Відновити мережу з раніше збереженого файлу">Відновити стан</button>
+          <input type="file" id="importStateFile" accept=".json,application/json" hidden />
+        </div>
       </div>
-      <input id="modelFile" type="file" accept=".json" style="display:none" onchange="loadModelFromFile(event)" />
-    </div>
-
-    <div class="card">
-      <h3>📜 Логи</h3>
-      <div class="row">
-        <button onclick="downloadLogs()">⬇️ Завантажити log</button>
-      </div>
-      <textarea id="logs" readonly></textarea>
-    </div>
-
-    <div class="card">
-      <h3>📊 Графік помилки</h3>
-      <canvas id="chart" width="600" height="300"></canvas>
-      <button onclick="downloadReport()">Експортувати звіт</button>
-    </div>
-
-    <div class="card">
-      <h3>🗺️ Візуалізація нейронів Кохонена</h3>
-      <canvas id="networkMap" width="400" height="400"></canvas>
-    </div>
+    </section>
   </div>
 
-  <script type="module" src="app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/app-boot.js"></script>
 </body>
-
 </html>

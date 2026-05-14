@@ -1,5 +1,51 @@
 {
-  "learningRate": 0.3,
-  "epochs": 50,
-  "kohonenNeurons": 3
+  "version": "1.0.0",
+  "locale": "uk",
+  "appTitle": "Мережа зустрічного поширення",
+  "paths": {
+    "logFilePrefix": "mzp",
+    "reportFilePrefix": "mzp_report",
+    "stateFilePrefix": "mzp_state"
+  },
+  "defaults": {
+    "kohNeurons": 6,
+    "learningRateKohonen": 0.3,
+    "learningRateGrossberg": 0.1,
+    "maxEpochs": 100
+  },
+  "ui": {
+    "primaryColor": "#2563eb",
+    "primaryHoverColor": "#1d4ed8",
+    "primaryLightColor": "rgba(37, 99, 235, 0.1)",
+    "secondaryColor": "#64748b",
+    "secondaryHoverColor": "#475569",
+    "backgroundColor": "#f8fafc",
+    "surfaceColor": "#ffffff",
+    "borderColor": "#e2e8f0",
+    "textColor": "#1e293b",
+    "textMutedColor": "#64748b",
+    "successColor": "#16a34a",
+    "warningColor": "#d97706",
+    "errorColor": "#dc2626",
+    "errorBackgroundColor": "#fef2f2",
+    "errorBorderColor": "#fecaca",
+    "networkColors": [
+      { "name": "червоний", "hex": "#ef4444" },
+      { "name": "зелений", "hex": "#22c55e" },
+      { "name": "синій", "hex": "#3b82f6" },
+      { "name": "жовтий", "hex": "#eab308" },
+      { "name": "білий", "hex": "#ffffff" },
+      { "name": "чорний", "hex": "#000000" }
+    ]
+  },
+  "logging": {
+    "maxEntries": 500,
+    "displayLimit": 10,
+    "autoSaveLogOnError": true,
+    "autoSaveLogOnClose": true
+  },
+  "persistence": {
+    "enabled": true,
+    "autoSave": true
+  }
 }
