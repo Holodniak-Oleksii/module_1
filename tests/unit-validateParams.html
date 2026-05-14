@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>Unit tests: validateTrainingParams</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #0f172a; color: #e5e7eb; }
+    .card { background: #1e293b; border: 1px solid #233046; border-radius: 12px; padding: 16px; max-width: 900px; margin: 0 auto; }
+    .summary { margin: 8px 0 16px; font-weight: bold; padding: 8px 12px; border-radius: 10px; border: 1px solid #233046; }
+    .pass { color: #22c55e; }
+    .fail { color: #ef4444; }
+    button { padding: 6px 12px; border: 0; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; }
+    .group { margin-top: 18px; }
+    .group h3 { margin: 14px 0 6px; }
+  </style>
+  <script src="../js/validation.js"></script>
+  <script>
+    let resultsRoot, summaryEl;
+    const state = { passed: 0, failed: 0, total: 0 };
+
+    function reset() {
+      state.passed = 0;
+      state.failed = 0;
+      state.total = 0;
+      resultsRoot.innerHTML = "";
+      renderSummary();
+    }
+
+    function renderSummary() {
+      summaryEl.textContent = `Усього: ${state.total} • Пройшло: ${state.passed} • Завалено: ${state.failed}`;
+      summaryEl.className = "summary " + (state.failed ? "fail" : "pass");
+    }
+
+    function printLine(text, ok, container) {
+      const p = document.createElement("p");
+      p.className = ok ? "pass" : "fail";
+      p.textContent = (ok ? "✔ " : "✘ ") + text;
+      container.appendChild(p);
+    }
+
+    function startGroup(title) {
+      const div = document.createElement("div");
+      div.className = "group";
+      const h = document.createElement("h3");
+      h.textContent = title;
+      div.appendChild(h);
+      resultsRoot.appendChild(div);
+      return div;
+    }
+
+    function assert(name, condition, groupEl) {
+      state.total += 1;
+      if (condition) state.passed += 1;
+      else state.failed += 1;
+      printLine(name, condition, groupEl);
+    }
+
+    function run() {
+      reset();
+      const valid = { kohNeurons: 6, learningRateKohonen: 0.3, learningRateGrossberg: 0.1, maxEpochs: 100 };
+
+      const g1 = startGroup("kohNeurons");
+      assert("6 нейронів → OK", validateTrainingParams(valid, 6).length === 0, g1);
+      assert("2 нейрони < 6 класів → помилка", validateTrainingParams({ ...valid, kohNeurons: 2 }, 6).length > 0, g1);
+      assert("21 нейрон → помилка", validateTrainingParams({ ...valid, kohNeurons: 21 }, 6).length > 0, g1);
+      assert("NaN → помилка", validateTrainingParams({ ...valid, kohNeurons: NaN }, 6).length > 0, g1);
+
+      const g2 = startGroup("learningRate");
+      assert("lr Kohonen = 0 → помилка", validateTrainingParams({ ...valid, learningRateKohonen: 0 }, 6).length > 0, g2);
+      assert("lr Kohonen = 1 → OK", validateTrainingParams({ ...valid, learningRateKohonen: 1 }, 6).length === 0, g2);
+      assert("lr Grossberg > 1 → помилка", validateTrainingParams({ ...valid, learningRateGrossberg: 1.5 }, 6).length > 0, g2);
+
+      const g3 = startGroup("maxEpochs");
+      assert("epochs = 1 → OK", validateTrainingParams({ ...valid, maxEpochs: 1 }, 6).length === 0, g3);
+      assert("epochs = 0 → помилка", validateTrainingParams({ ...valid, maxEpochs: 0 }, 6).length > 0, g3);
+      assert("epochs = 501 → помилка", validateTrainingParams({ ...valid, maxEpochs: 501 }, 6).length > 0, g3);
+      assert("epochs = 3.5 → помилка", validateTrainingParams({ ...valid, maxEpochs: 3.5 }, 6).length > 0, g3);
+
+      renderSummary();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      summaryEl = document.getElementById("summary");
+      resultsRoot = document.getElementById("results");
+      document.getElementById("runBtn").addEventListener("click", run);
+      run();
+    });
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h2>Unit tests: validateTrainingParams</h2>
+    <div id="summary" class="summary">Запуск…</div>
+    <button id="runBtn">Run tests</button>
+    <div id="results"></div>
+  </div>
+</body>
+</html>
