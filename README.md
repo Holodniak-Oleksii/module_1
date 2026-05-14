@@ -34,7 +34,7 @@ module-1/
 │   ├── ui.js
 │   └── tests.js
 ├── tests/
-│   └── unit-validateParams.html
+│   └── run-validateParams.js
 ├── TESTING.md
 └── README.md
 ```
@@ -56,5 +56,5 @@ module-1/
 - Додано `js/validation.js` — централізована валідація параметрів навчання.
 - Виправлено BUG-1: заборонено навчання з `kohNeurons` меншим за кількість класів кольорів (6).
 - Виправлено BUG-2: оновлено текст порожнього графіка порівняння на вкладці «Звіт».
-- Додано unit-тест `tests/unit-validateParams.html`.
+- Додано unit-тест `tests/run-validateParams.js` (запуск: `node tests/run-validateParams.js`).
 - Результати функціонального та регресійного тестування — у `TESTING.md`.

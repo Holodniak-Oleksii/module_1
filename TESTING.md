@@ -85,6 +85,12 @@
 
 ## Додатково: Unit-тест
 
-Файл: `tests/unit-validateParams.html` — перевіряє `validateTrainingParams` з `js/validation.js`.
+Файл: `tests/run-validateParams.js` — перевіряє `validateTrainingParams` з `js/validation.js`.
 
-Запуск: відкрити файл у браузері; усі 11 тестів мають статус «пройшло».
+Запуск у терміналі:
+
+```
+node tests/run-validateParams.js
+```
+
+У консолі відображаються групи тестів, статус кожного кроку (PASS/FAIL), прогрес-бар і підсумок.
